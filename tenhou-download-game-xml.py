@@ -2,13 +2,11 @@
 
 import glob
 import os
+import struct
 from optparse import OptionParser
-from struct import Struct
 from urllib.parse import parse_qs
 from urllib.request import urlopen
 from urllib.error import HTTPError
-import struct
-import codecs
 
 table = [
     22136, 52719, 55146, 42104, 
@@ -34,7 +32,7 @@ def tenhouHash(game):
             index = x % (33 - y)
         first = (a ^ b ^ table[index]) & 0xFFFF
         second = (b ^ c ^ table[index] ^ table[index + 1]) & 0xFFFF
-        return game[:code_pos] + codecs.getencoder('hex_codec')(struct.pack(">HH", first, second))[0].decode('ASCII')
+        return game[:code_pos] + "{:04x}{:04x}".format(first, second)
     else:
         return game
 
@@ -71,15 +69,15 @@ for sol_file in sol_files:
     # What follows is a limited parser for Flash Local Shared Object files -
     # a more complete implementation may be found at:
     # https://pypi.python.org/pypi/PyAMF
-    header = Struct('>HI10s8sI')
+    header = struct.Struct('>HI10s8sI')
     magic, objlength, magic2, mjinfo, padding = header.unpack_from(data)
     offset = header.size
     assert magic == 0xbf
     assert magic2 == b'TCSO\0\x04\0\0\0\0'
     assert mjinfo == b'\0\x06mjinfo'
     assert padding == 0
-    ushort = Struct('>H')
-    ubyte = Struct('>B')
+    ushort = struct.Struct('>H')
+    ubyte = struct.Struct('>B')
     while offset < len(data):
         length, = ushort.unpack_from(data, offset)
         offset += ushort.size
