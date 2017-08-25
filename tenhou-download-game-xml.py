@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 import glob
+import json
 import os
+import sqlite3
 import struct
 from optparse import OptionParser
 from urllib.parse import parse_qs
@@ -73,6 +75,12 @@ for pattern in (
         '~/Library/Application Support/Google/Chrome/Default/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol',
         ):
     sol_files.extend(glob.glob(os.path.join(os.path.expanduser(pattern))))
+sqlite_files = []
+for pattern in (
+        '~/.config/chromium/*/Local Storage/http_tenhou.net_0.localstorage',
+        '~/.config/google-chrome/*/Local Storage/http_tenhou.net_0.localstorage',
+        ):
+    sqlite_files.extend(glob.glob(os.path.join(os.path.expanduser(pattern))))
 
 for sol_file in sol_files:
     print("Reading Flash state file: {}".format(sol_file))
@@ -124,3 +132,16 @@ for sol_file in sol_files:
     for logline in loglines:
         logname = parse_qs(logline.decode('ASCII'))['file'][0]
         get_game(logname)
+
+for sqlite_file in sqlite_files:
+    print("Reading Chrome localstorage: {}".format(sqlite_file))
+    db = sqlite3.connect(sqlite_file)
+    c = db.cursor()
+    c.execute('SELECT key, value FROM ItemTable')
+    for key, value in c.fetchall():
+        value = value.decode('utf-16le')
+        if key.startswith('log') and key != 'lognext':
+            obj = json.loads(value)
+            get_game(obj['log'])
+    c.close()
+    db.close()
