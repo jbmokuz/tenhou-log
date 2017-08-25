@@ -43,8 +43,6 @@ p.add_option('-d', '--directory',
         default=os.path.expanduser('~/.tenhou-game-xml'),
         help='Directory in which to store downloaded XML')
 opts, args = p.parse_args()
-if args:
-    p.error('This command takes no positional arguments')
 
 if not os.path.exists(opts.directory):
     os.makedirs(opts.directory)
@@ -66,6 +64,9 @@ def get_game(logname):
                 print("Could not download game {}. Is the game still in progress?".format(logname))
             else:
                 raise
+
+for arg in args:
+    get_game(arg)
 
 sol_files = []
 for pattern in (
