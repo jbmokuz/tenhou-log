@@ -44,21 +44,6 @@ opts, args = p.parse_args()
 if args:
     p.error('This command takes no positional arguments')
 
-sol_files = []
-sol_files.extend(glob.glob(os.path.join(
-    os.path.expanduser('~'),
-    '.config/chromium/*/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol')))
-sol_files.extend(glob.glob(os.path.join(
-    os.path.expanduser('~'),
-    '.config/google-chrome/*/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol')))
-sol_files.extend(glob.glob(os.path.join(
-    os.path.expanduser('~'),
-    '.macromedia/Flash_Player/#SharedObjects/*/mjv.jp/mjinfo.sol')))
-# mac os
-sol_files.extend(glob.glob(os.path.join(
-    os.path.expanduser('~'),
-    'Library/Application Support/Google/Chrome/Default/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol')))
-
 if not os.path.exists(opts.directory):
     os.makedirs(opts.directory)
 
@@ -79,6 +64,15 @@ def get_game(logname):
                 print("Could not download game {}. Is the game still in progress?".format(logname))
             else:
                 raise
+
+sol_files = []
+for pattern in (
+        '~/.config/chromium/*/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol',
+        '~/.config/google-chrome/*/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol',
+        '~/.macromedia/Flash_Player/#SharedObjects/*/mjv.jp/mjinfo.sol',
+        '~/Library/Application Support/Google/Chrome/Default/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects/*/mjv.jp/mjinfo.sol',
+        ):
+    sol_files.extend(glob.glob(os.path.join(os.path.expanduser(pattern))))
 
 for sol_file in sol_files:
     print("Reading Flash state file: {}".format(sol_file))
