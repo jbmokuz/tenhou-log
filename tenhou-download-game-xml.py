@@ -50,9 +50,7 @@ if not os.path.exists(opts.directory):
 def get_game(logname):
     logname = tenhouHash(logname)
     target_fname = os.path.join(opts.directory, "{}.xml".format(logname))
-    if os.path.exists(target_fname):
-        print("Game {} already downloaded".format(logname))
-    else:
+    if not os.path.exists(target_fname):
         print("Downloading game {}".format(logname))
         try:
             resp = urlopen('http://e.mjv.jp/0/log/?' + logname)
