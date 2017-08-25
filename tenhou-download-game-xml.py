@@ -62,6 +62,24 @@ sol_files.extend(glob.glob(os.path.join(
 if not os.path.exists(opts.directory):
     os.makedirs(opts.directory)
 
+def get_game(logname):
+    logname = tenhouHash(logname)
+    target_fname = os.path.join(opts.directory, "{}.xml".format(logname))
+    if os.path.exists(target_fname):
+        print("Game {} already downloaded".format(logname))
+    else:
+        print("Downloading game {}".format(logname))
+        try:
+            resp = urlopen('http://e.mjv.jp/0/log/?' + logname)
+            data = resp.read()
+            with open(target_fname, 'wb') as f:
+                f.write(data)
+        except HTTPError as e:
+            if e.code == 404:
+                print("Could not download game {}. Is the game still in progress?".format(logname))
+            else:
+                raise
+
 for sol_file in sol_files:
     print("Reading Flash state file: {}".format(sol_file))
     with open(sol_file, 'rb') as f:
@@ -111,19 +129,4 @@ for sol_file in sol_files:
 
     for logline in loglines:
         logname = parse_qs(logline.decode('ASCII'))['file'][0]
-        logname = tenhouHash(logname)
-        target_fname = os.path.join(opts.directory, "{}.xml".format(logname))
-        if os.path.exists(target_fname):
-            print("Game {} already downloaded".format(logname))
-        else:
-            print("Downloading game {}".format(logname))
-            try:
-                resp = urlopen('http://e.mjv.jp/0/log/?' + logname)
-                data = resp.read()
-                with open(target_fname, 'wb') as f:
-                    f.write(data)
-            except HTTPError as e:
-                if e.code == 404:
-                    print("Could not download game {}. Is the game still in progress?".format(logname))
-                else:
-                    raise
+        get_game(logname)
