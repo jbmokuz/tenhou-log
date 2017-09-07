@@ -217,7 +217,7 @@ class Game(Data):
         self.round = Round()
         self.rounds.append(self.round)
         name, combo, riichi, d0, d1, dora = self.decodeList(data["seed"])
-        self.round.round = self.ROUND_NAMES[name], combo, riichi
+        self.round.round = self.ROUND_NAMES[name % len(self.ROUND_NAMES)], combo, riichi
         self.round.hands = tuple(self.decodeList(data[hand], Tile) for hand in self.HANDS if hand in data and data[hand])
         self.round.dealer = int(data["oya"])
         self.round.events = []
