@@ -2,7 +2,7 @@
 
 import xml.etree.ElementTree as etree
 import urllib.parse
-from Data import Data
+from .Data import Data
 
 class Tile(Data, int):
     UNICODE_TILES = """
