@@ -5,6 +5,7 @@ import json
 import os
 import sqlite3
 import struct
+import sys
 from optparse import OptionParser
 from urllib.parse import parse_qs
 from urllib.request import urlopen
@@ -80,6 +81,12 @@ for pattern in (
         '~/.config/google-chrome/*/Local Storage/http_tenhou.net_0.localstorage',
         ):
     sqlite_files.extend(glob.glob(os.path.join(os.path.expanduser(pattern))))
+leveldb_directories = []
+for pattern in (
+        '~/.config/chromium/*/Local Storage/leveldb',
+        '~/.config/google-chrome/*/Local Storage/leveldb',
+        ):
+    leveldb_directories.extend(glob.glob(os.path.join(os.path.expanduser(pattern))))
 
 for sol_file in sol_files:
     print("Reading Flash state file: {}".format(sol_file))
@@ -144,3 +151,27 @@ for sqlite_file in sqlite_files:
             get_game(obj['log'])
     c.close()
     db.close()
+
+def decode_chrome_leveldb_bytes(value):
+    if value[0] == 0:
+        return value[1:].decode('utf-16le')
+    elif value[0] == 1:
+        return value[1:].decode('utf-8')
+    else:
+        sys.exit("Unable to process Chrome LevelDB bytes in unknown format: {}".format(value))
+
+if leveldb_directories:
+    try:
+        import leveldb
+    except ImportError:
+        sys.exit("Please install the Python 'leveldb' module to enable reading Chrome/Chromium 61 or later Local Storage")
+    for leveldb_directory in leveldb_directories:
+        print("Reading Chrome localstorage: {}".format(leveldb_directory))
+        db = leveldb.LevelDB(leveldb_directory)
+        for key, value in db.RangeIter(b'_http://tenhou.net\x00', b'_http://tenhou.net\x01', True):
+            key = key.split(b'\x00', 1)[1]
+            key = decode_chrome_leveldb_bytes(key)
+            if key.startswith('log') and key != 'lognext':
+                value = decode_chrome_leveldb_bytes(value)
+                obj = json.loads(value)
+                get_game(obj['log'])
