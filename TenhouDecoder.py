@@ -1,14 +1,15 @@
-#! /usr/bin/python3
+﻿#! /usr/bin/python3
+# -*- coding: utf-8 -*-
 
 import xml.etree.ElementTree as etree
 import urllib.parse
-from .Data import Data
+from Data import Data
 
 class Tile(Data, int):
     UNICODE_TILES = """
         🀐 🀑 🀒 🀓 🀔 🀕 🀖 🀗 🀘
         🀙 🀚 🀛 🀜 🀝 🀞 🀟 🀠 🀡
-        🀇 🀈 🀉 🀊 🀋 🀌 🀍 🀎 🀏 
+        🀇 🀈 🀉 🀊 🀋 🀌 🀍 🀎 🀏
         🀀 🀁 🀂 🀃
         🀆 🀅 🀄
     """.split()
@@ -23,9 +24,9 @@ class Tile(Data, int):
 
     def asdata(self, convert = None):
         return self.TILES[self // 4] + str(self % 4)
-        
+
 class Player(Data):
-    pass    
+    pass
 
 class Round(Data):
     pass
@@ -54,7 +55,7 @@ class Meld(Data):
         base = baseAndCalled // 3
         base = (base // 7) * 9 + base % 7
         self.tiles = Tile(t0 + 4 * (base + 0)), Tile(t1 + 4 * (base + 1)), Tile(t2 + 4 * (base + 2))
-    
+
     def decodePon(self, data):
         t4 = (data >> 5) & 0x3
         t0, t1, t2 = ((1,2,3),(0,2,3),(0,1,3),(0,1,2))[t4]
@@ -67,7 +68,7 @@ class Meld(Data):
         else:
             self.type = "chakan"
             self.tiles = Tile(t0 + 4 * base), Tile(t1 + 4 * base), Tile(t2 + 4 * base), Tile(t4 + 4 * base)
-    
+
     def decodeKan(self, data):
         baseAndCalled = data >> 8
         if self.fromPlayer:
@@ -180,7 +181,7 @@ class Game(Data):
     LIMITS=",mangan,haneman,baiman,sanbaiman,yakuman".split(",")
 
     TAGS = {}
-    
+
     def tagGO(self, tag, data):
         self.gameType = data["type"]
         # The <GO lobby=""/> attribute was introduced at some point between
@@ -209,7 +210,7 @@ class Game(Data):
             for (player, name) in zip(self.players, self.NAMES):
                 if name in data:
                     player.connected = True
-    
+
     def tagBYE(self, tag, data):
         self.players[int(data["who"])].connected = False
 
@@ -256,7 +257,7 @@ class Game(Data):
         agari.type = "RON" if data["fromWho"] != data["who"] else "TSUMO"
         agari.player = int(data["who"])
         agari.hand = self.decodeList(data["hai"], Tile)
-        
+
         agari.fu, agari.points, limit = self.decodeList(data["ten"])
         if limit:
             agari.limit = self.LIMITS[limit]
@@ -298,7 +299,10 @@ class Game(Data):
         return tuple(dtype(i) for i in list.split(","))
 
     def decode(self, log):
-        events = etree.parse(log).getroot()
+        try:
+            events = etree.parse(log).getroot()
+        except:
+            events = etree.fromstring(log)
         self.rounds = []
         self.players = []
         for event in events:

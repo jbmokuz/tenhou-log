@@ -20,13 +20,13 @@ class YakuCounter(Data):
     def addRound(self, round):
         for agari in round.agari:
             self.addAgari(agari)
-    
+
     def addAgari(self, agari):
         counterYaku, counterHan = self.closed if agari.closed else self.opened
         allCounterYaku, allCounterHan = self.all
         self.hands["closed" if agari.closed else "opened"] += 1
         if hasattr(agari, 'yaku'):
-            for yaku, han in agari.yaku.items():
+            for yaku, han in agari.yaku:
                 counterYaku[yaku] += 1
                 counterHan[yaku] += han
                 allCounterYaku[yaku] += 1
@@ -42,4 +42,3 @@ if __name__ == '__main__':
         game.decode(open(path))
         counter.addGame(game)
     yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
-        
