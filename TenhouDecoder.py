@@ -1,8 +1,14 @@
 ﻿#! /usr/bin/python3
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import xml.etree.ElementTree as etree
+from inspect import getsourcefile
+import json
+import os
+import re
 import urllib.parse
+import xml.etree.ElementTree as etree
+
 from Data import Data
 
 class Tile(Data, int):
@@ -22,7 +28,7 @@ class Tile(Data, int):
         wd gd rd
     """.split()
 
-    def asdata(self, convert = None):
+    def asdata(self, ignored):
         return self.TILES[self // 4] + str(self % 4)
 
 class Player(Data):
@@ -58,7 +64,7 @@ class Meld(Data):
 
     def decodePon(self, data):
         t4 = (data >> 5) & 0x3
-        t0, t1, t2 = ((1,2,3),(0,2,3),(0,1,3),(0,1,2))[t4]
+        t0, t1, t2 = ((1, 2, 3), (0, 2, 3), (0, 1, 3), (0, 1, 2))[t4]
         baseAndCalled = data >> 9
         self.called = baseAndCalled % 3
         base = baseAndCalled // 3
@@ -112,75 +118,80 @@ class Game(Data):
     NAMES = "n0,n1,n2,n3".split(",")
     HANDS = "hai0,hai1,hai2,hai3".split(",")
     ROUND_NAMES = "東1,東2,東3,東4,南1,南2,南3,南4,西1,西2,西3,西4,北1,北2,北3,北4".split(",")
-    YAKU = (
-            # 一飜
-            'mentsumo',        # 門前清自摸和
-            'riichi',          # 立直
-            'ippatsu',         # 一発
-            'chankan',         # 槍槓
-            'rinshan kaihou',  # 嶺上開花
-            'haitei raoyue',   # 海底摸月
-            'houtei raoyui',   # 河底撈魚
-            'pinfu',           # 平和
-            'tanyao',          # 断幺九
-            'iipeiko',         # 一盃口
-            # seat winds
-            'ton',             # 自風 東
-            'nan',             # 自風 南
-            'xia',             # 自風 西
-            'pei',             # 自風 北
-            # round winds
-            'ton',             # 場風 東
-            'nan',             # 場風 南
-            'xia',             # 場風 西
-            'pei',             # 場風 北
-            'haku',            # 役牌 白
-            'hatsu',           # 役牌 發
-            'chun',            # 役牌 中
-            # 二飜
-            'daburu riichi',   # 両立直
-            'chiitoitsu',      # 七対子
-            'chanta',          # 混全帯幺九
-            'ittsu',           # 一気通貫
-            'sanshoku doujun', # 三色同順
-            'sanshoku doukou', # 三色同刻
-            'sankantsu',       # 三槓子
-            'toitoi',          # 対々和
-            'sanankou',        # 三暗刻
-            'shousangen',      # 小三元
-            'honroutou',       # 混老頭
-            # 三飜
-            'ryanpeikou',      # 二盃口
-            'junchan',         # 純全帯幺九
-            'honitsu',         # 混一色
-            # 六飜
-            'chinitsu',        # 清一色
-            # 満貫
-            'renhou',          # 人和
-            # 役満
-            'tenhou',                # 天和
-            'chihou',                # 地和
-            'daisangen',             # 大三元
-            'suuankou',              # 四暗刻
-            'suuankou tanki',        # 四暗刻単騎
-            'tsuuiisou',             # 字一色
-            'ryuuiisou',             # 緑一色
-            'chinroutou',            # 清老頭
-            'chuuren pouto',         # 九蓮宝燈
-            'chuuren pouto 9-wait',  # 純正九蓮宝燈
-            'kokushi musou',         # 国士無双
-            'kokushi musou 13-wait', # 国士無双１３面
-            'daisuushi',             # 大四喜
-            'shousuushi',            # 小四喜
-            'suukantsu',             # 四槓子
-            # 懸賞役
-            'dora',    # ドラ
-            'uradora', # 裏ドラ
-            'akadora', # 赤ドラ
-            )
-    LIMITS=",mangan,haneman,baiman,sanbaiman,yakuman".split(",")
+    YAKU_NAMES = {}
+    YAKU = {
+        # one-han yaku
+        0:'門前清自摸和',     # menzen tsumo
+        1:'立直',           # riichi
+        2:'一発',           # ippatsu
+        3:'槍槓',           # chankan
+        4:'嶺上開花',        # rinshan kaihou
+        5:'海底摸月',        # haitei raoyue
+        6:'河底撈魚',        # houtei raoyui
+        7:'平和',           # pinfu
+        8:'断幺九',         # tanyao
+        9:'一盃口',         # iipeiko
+        # seat winds
+        10:'自風 東',       # ton
+        11:'自風 南',       # nan
+        12:'自風 西',       # xia
+        13:'自風 北',       # pei
+        # round winds
+        14:'場風 東',       # ton
+        15:'場風 南',       # nan
+        16:'場風 西',       # xia
+        17:'場風 北',       # pei
+        18:'役牌 白',       # haku
+        19:'役牌 發',       # hatsu
+        20:'役牌 中',       # chun
+        # two-han yaku
+        21:'両立直',        # daburu riichi
+        22:'七対子',        # chiitoitsu
+        23:'混全帯幺九',     # chanta
+        24:'一気通貫',       # ittsu
+        25:'三色同順',       # sanshoku doujun
+        26:'三色同刻',       # sanshoku doukou
+        27:'三槓子',        # sankantsu
+        28:'対々和',        # toitoi
+        29:'三暗刻',        # sanankou
+        30:'小三元',        # shousangen
+        31:'混老頭',        # honroutou
+        # three-han yaku
+        32:'二盃口',        # ryanpeikou
+        33:'純全帯幺九',     # junchan
+        34:'混一色',        # honitsu
+        # six-han yaku
+        35:'清一色',        # chinitsu
+        # unused
+        36:'人和',          # renhou
+        # yakuman
+        37:'天和',          # tenhou
+        38:'地和',          # chihou
+        39:'大三元',        # daisangen
+        40:'四暗刻',        # suuankou
+        41:'四暗刻単騎',     # suuankou tanki
+        42:'字一色',        # tsuuiisou
+        43:'緑一色',        # ryuuiisou
+        44:'清老頭',        # chinroutou
+        45:'九蓮宝燈',       # chuuren pouto
+        46:'純正九蓮宝燈',    # chuuren pouto 9-wait
+        47:'国士無双',       # kokushi musou
+        48:'国士無双１３面',   # kokushi musou 13-wait
+        49:'大四喜',        # daisuushi
+        50:'小四喜',        # shousuushi
+        51:'四槓子',        # suukantsu
+        # dora
+        52:'ドラ',          # dora
+        53:'裏ドラ',         # uradora
+        54:'赤ドラ',         # akadora
+        }
+
+    LIMITS = ",mangan,haneman,baiman,sanbaiman,yakuman".split(",")
 
     TAGS = {}
+
+    def __init__(self, lang):
+        self.lang = lang
 
     def tagGO(self, tag, data):
         self.gameType = data["type"]
@@ -199,8 +210,8 @@ class Game(Data):
                     player.name = urllib.parse.unquote(data[name])
                     self.players.append(player)
             ranks = self.decodeList(data["dan"])
-            sexes = self.decodeList(data["sx"], dtype = str)
-            rates = self.decodeList(data["rate"], dtype = float)
+            sexes = self.decodeList(data["sx"], dtype=str)
+            rates = self.decodeList(data["rate"], dtype=float)
             for (player, rank, sex, rate) in zip(self.players, ranks, sexes, rates):
                 player.rank = self.RANKS[rank]
                 player.sex = sex
@@ -215,16 +226,17 @@ class Game(Data):
         self.players[int(data["who"])].connected = False
 
     def tagINIT(self, tag, data):
+        name, combo, riichi, d0, d1, dora = self.decodeList(data["seed"])
         self.round = Round()
         self.rounds.append(self.round)
-        name, combo, riichi, d0, d1, dora = self.decodeList(data["seed"])
-        self.round.round = self.ROUND_NAMES[name % len(self.ROUND_NAMES)], combo, riichi
-        self.round.hands = tuple(self.decodeList(data[hand], Tile) for hand in self.HANDS if hand in data and data[hand])
         self.round.dealer = int(data["oya"])
-        self.round.events = []
+        self.round.hands = tuple(self.decodeList(data[hand], Tile) for hand in self.HANDS if hand in data and data[hand])
+        self.round.round = self.ROUND_NAMES[name % len(self.ROUND_NAMES)], combo, riichi
         self.round.agari = []
+        self.round.events = []
         self.round.ryuukyoku = False
         self.round.ryuukyoku_tenpai = None
+
         Dora(self.round.events).tile = Tile(dora)
 
     def tagN(self, tag, data):
@@ -274,9 +286,13 @@ class Game(Data):
             agari.fromPlayer = int(data["fromWho"])
         if "yaku" in data:
             yakuList = self.decodeList(data["yaku"])
-            agari.yaku = tuple((self.YAKU[yaku],han) for yaku,han in zip(yakuList[::2], yakuList[1::2]))
-        elif "yakuman" in data:
-            agari.yakuman = tuple(self.YAKU[yaku] for yaku in self.decodeList(data["yakuman"]))
+            agari.yaku = tuple(
+                (self.YAKU_NAMES[self.YAKU[yaku]][self.lang], han)
+                for yaku, han in zip(yakuList[::2], yakuList[1::2]))
+        if "yakuman" in data:
+            agari.yakuman = tuple(
+                self.YAKU_NAMES[self.YAKU[yaku]][self.lang]
+                for yaku in self.decodeList(data["yakuman"]))
         if 'owari' in data:
             self.owari = data['owari']
 
@@ -295,8 +311,8 @@ class Game(Data):
             pass
 
     @staticmethod
-    def decodeList(list, dtype = int):
-        return tuple(dtype(i) for i in list.split(","))
+    def decodeList(thislist, dtype = int):
+        return tuple(dtype(i) for i in thislist.split(","))
 
     def decode(self, log):
         try:
@@ -309,6 +325,19 @@ class Game(Data):
             self.TAGS.get(event.tag, self.default)(self, event.tag, event.attrib)
         del self.round
 
+thisdir = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+with open(os.path.join(thisdir, 'translations.js'), 'r', encoding='utf-8') as infile:
+    txt = infile.read()
+txt1 = txt[txt.find('{') : txt.find('\n};\n')+2]
+txt15 = re.sub(r'//[^\n]+\n', '\n', txt1)
+txt2 = re.sub(r"(\n *)'([^']+)'(:)", r'\1"\2"\3', txt15)
+txt3 = re.sub(r"(: *)'([^\n]+)'(,)", r'\1"\2"\3', txt2)
+txt4 = txt3.replace('\n', '')
+txt5 = re.sub(r',[\n ]*}', '}', txt4)
+txt6 = re.sub(r'\n', '', txt5)
+txt7 = re.sub(r"\\'", "'", txt6)
+Game.YAKU_NAMES = json.loads(txt7)
+
 for key in Game.__dict__:
     if key.startswith('tag'):
         Game.TAGS[key[3:]] = getattr(Game, key)
@@ -317,6 +346,6 @@ if __name__=='__main__':
     import yaml
     import sys
     for path in sys.argv[1:]:
-        game = Game()
+        game = Game('DEFAULT')
         game.decode(open(path))
         yaml.dump(game.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
