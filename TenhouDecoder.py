@@ -297,21 +297,21 @@ class Game(Data):
             self.owari = data['owari']
 
     @staticmethod
-    def default(self, tag, data):
+    def default(obj, tag, data):
         if tag[0] in "DEFG":
-            discard = Discard(self.round.events)
+            discard = Discard(obj.round.events)
             discard.tile = Tile(tag[1:])
             discard.player = ord(tag[0]) - ord("D")
-            discard.connected = self.players[discard.player].connected
+            discard.connected = obj.players[discard.player].connected
         elif tag[0] in "TUVW":
-            draw = Draw(self.round.events)
+            draw = Draw(obj.round.events)
             draw.tile = Tile(tag[1:])
             draw.player = ord(tag[0]) - ord("T")
         else:
             pass
 
     @staticmethod
-    def decodeList(thislist, dtype = int):
+    def decodeList(thislist, dtype=int):
         return tuple(dtype(i) for i in thislist.split(","))
 
     def decode(self, log):
@@ -342,7 +342,7 @@ for key in Game.__dict__:
     if key.startswith('tag'):
         Game.TAGS[key[3:]] = getattr(Game, key)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     import yaml
     import sys
     for path in sys.argv[1:]:

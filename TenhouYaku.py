@@ -7,18 +7,19 @@ from Data import Data
 YakuHanCounter = collections.namedtuple('YakuHanCounter', 'yaku han')
 
 class YakuCounter(Data):
-    def __init__(self, player_id):
-        self.player_index = -1
-        self.player_id = player_id
+    def __init__(self, player = None, winner = None):
+        self.player = player
+        self.winner = winner
         self.hands = collections.Counter()
+        self.relevantHands = collections.Counter()
         self.closed = YakuHanCounter(collections.Counter(), collections.Counter())
         self.opened = YakuHanCounter(collections.Counter(), collections.Counter())
         self.all = YakuHanCounter(collections.Counter(), collections.Counter())
 
     def addGame(self, game):
-        self.player_index = -1
+        self.player_index = None
         for idx, player in enumerate(game.players):
-            if player.name == self.player_id:
+            if player.name == self.player:
                 self.player_index = idx
                 break
         for round in game.rounds:
@@ -32,8 +33,19 @@ class YakuCounter(Data):
         counterYaku, counterHan = self.closed if agari.closed else self.opened
         allCounterYaku, allCounterHan = self.all
         self.hands["closed" if agari.closed else "opened"] += 1
-        if self.player_index != -1 and self.player_index != agari.player:
+        if (
+            self.player is not None
+            and self.winner is True
+            and self.player_index != agari.player
+            ) or (
+            self.player is not None
+            and self.winner is False
+            and (
+                not hasattr(agari, 'fromPlayer')
+                or self.player_index != agari.fromPlayer
+            )):
             return
+        self.relevantHands["closed" if agari.closed else "opened"] += 1
         if hasattr(agari, 'yaku'):
             for yaku, han in agari.yaku:
                 counterYaku[yaku] += 1
