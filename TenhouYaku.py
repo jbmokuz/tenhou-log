@@ -27,6 +27,8 @@ class YakuCounter(Data):
             self.addRound(round)
 
     def addRound(self, round):
+        for agari in round.agari:
+            self.addAgari(agari)
         try:
             when_did_i_reach = round.reaches.index(self.player_index)
             self.reach_outcomes.append({

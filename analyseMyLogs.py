@@ -12,6 +12,7 @@ import sys
 import yaml
 
 # own imports
+from Data import Data
 from TenhouConfig import account_names, directory_name
 import TenhouDecoder
 import TenhouYaku
@@ -42,9 +43,16 @@ for player in account_names:
 
     for log in logs:
         gamecount += 1
-        game = TenhouDecoder.Game('DEFAULT')
+        game = TenhouDecoder.Game(lang='DEFAULT', suppress_draws=True)
         game.decode(logs[log]['content'].decode())
         counter.addGame(game)
 
+reach = Data()
+reach.outcomes = counter.reach_outcomes.copy()
+del counter.reach_outcomes
+
 print('%d games' % gamecount)
 yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
+
+print('\n==================================\n')
+yaml.dump(reach.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)

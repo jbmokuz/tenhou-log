@@ -10,15 +10,11 @@ XML game logs are stored in a 7-zipped pickle file.
 
 `getlogs.py`
 ---------------
-Finds games to download from Firefox localStorage (by default). It also (on request, not default) tries Chrome localStorage. In each case, if directly accessing the localStorage file fails (leveldb access for Chrome fails on windows), it automates opening the browser and gets the localStorage that way - ugly but effective). It can also take game IDs or game URLs from the command line. It then calls `tenhoulogs.py` with the list of game IDs. There are several command-line options to change the behaviour.
+Finds games to download from Firefox localStorage (by default). It also (on request, not default) tries Chrome localStorage. If directly accessing the localStorage file fails (leveldb access for Chrome fails on windows), it automates opening the browser and gets the localStorage that way: this is ugly but effective. It can also take game IDs or game URLs from the command line. It then calls `tenhoulogs.py` with the list of game IDs. There are several command-line options to change the behaviour.
 
 `tenhoulogs.py`
 ------------------
-Cycles over a bunch of ids, downloads them via tenhou-download-log.py, and adds them into the store. Stores all those logs in a 7zipped pickle file. Also dumps out a csv file of game results with R-rate changes, which can be combined with the game logs from [nodocchi.moe](https://nodocchi.moe/tenhoulog/) to chart your progress.
-
-`tenhou-download-log.py`
----------------------------
-Not used here: this was in the parent repository, and I used it as the basis for `tenhoulogs.py`
+Cycles over a bunch of ids, downloads them, and adds them into the store. Stores all those logs in a 7zipped pickle file. Also dumps out a csv file of game results with R-rate changes, which can be combined with the game logs from [nodocchi.moe](https://nodocchi.moe/tenhoulog/) to chart your progress.
 
 `TenhouConfig.py`
 ------------------

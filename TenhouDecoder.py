@@ -190,7 +190,8 @@ class Game(Data):
 
     TAGS = {}
 
-    def __init__(self, lang):
+    def __init__(self, lang, suppress_draws=False):
+        self.suppress_draws = suppress_draws
         self.lang = lang
 
     def tagGO(self, tag, data):
@@ -310,6 +311,8 @@ class Game(Data):
 
     @staticmethod
     def default(obj, tag, data):
+        if obj.suppress_draws:
+            return
         if tag[0] in "DEFG":
             discard = Discard(obj.round.events)
             discard.tile = Tile(tag[1:])
