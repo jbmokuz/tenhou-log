@@ -12,10 +12,9 @@ import sys
 import yaml
 
 # own imports
+from TenhouConfig import account_names, directory_name
 import TenhouDecoder
 import TenhouYaku
-
-mydir = 'C:/library/Dropbox/source/tenhou/logs/'
 
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
@@ -36,9 +35,9 @@ args = parser.parse_args()
 counter = TenhouYaku.YakuCounter(winner = args.winner or (False if args.loser is True else None))
 gamecount = 0
 
-for player in ('ApplySci', 'RedShoes'):
+for player in account_names:
     counter.player = player
-    with lzma.open(mydir + player + '.pickle.7z', 'rb') as infile:
+    with lzma.open(directory_name + player + '.pickle.7z', 'rb') as infile:
         logs = pickle.load(infile)
 
     for log in logs:

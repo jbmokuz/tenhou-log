@@ -1,12 +1,55 @@
 tenhou-log
 ==========
 
-Scripts for downloading logs from tenhou.net
+Scripts for downloading and aggregating logs from [Tenhou online riichi mahjong](http://tenhou.net/3)
 
-tenhou-download-game-xml.py
+*Retrieving and archiving logs*
+---
+
+XML game logs are stored in a 7-zipped pickle file.
+
+`getlogs.py`
+---------------
+Finds games to download from Firefox localStorage (by default). It also (on request, not default) tries Chrome localStorage. In each case, if directly accessing the localStorage file fails (leveldb access for Chrome fails on windows), it automates opening the browser and gets the localStorage that way - ugly but effective). It can also take game IDs or game URLs from the command line. It then calls `tenhoulogs.py` with the list of game IDs. There are several command-line options to change the behaviour.
+
+`tenhoulogs.py`
+------------------
+Cycles over a bunch of ids, downloads them via tenhou-download-log.py, and adds them into the store. Stores all those logs in a 7zipped pickle file. Also dumps out a csv file of game results with R-rate changes, which can be combined with the game logs from [nodocchi.moe](https://nodocchi.moe/tenhoulog/) to chart your progress.
+
+`tenhou-download-log.py`
 ---------------------------
+Not used here: this was in the parent repository, and I used it as the basis for `tenhoulogs.py`
 
-Scans flash local storage for tenhou log file names and then downloads the game xml from tenhou.net.
+`TenhouConfig.py`
+------------------
+**You must customise this file** to specify your own Tenhou account name(s) and the directory you want the output files to be stored in.
+
+---
+
+*Analysing logs*
+---
+
+`analyseMyLogs.py`
+--------------
+Example use of the log analyser to cycle through many log files (perhaps for several accounts for one person) and aggregate results. Uses `TenhouConfig.py` for account names and work directory, `TenhouDecoder.py` to process the log files, and `TenhouYaku.py` to produce the summary stats.
+
+`TenhouDecoder.py`
+---------------------
+Processes a raw tenhou xml log file, and turns into a python object that can be examined easily. Uses `Data.py` to dump out objects as plain text.
+
+`TenhouYaku.py`
+---------------------
+Counts the frequency of each yaku in winning hands. Now customisable so that you can specify only the yaku in your own winning hands, or in all winning hands, or only hands you dealt into. It now also logs outcomes of hands where you riichid - how many points you won or lost on that hand, how the hand resolved (you won, you dealt in, draw, someone else tsumod, someone else dealt into someone else and you were just a bystander).
+
+`translations.js`
+---------------------
+Taken directly from the [Tenhou UI translator](https://gitlab.com/zefiris/tenhou-english-ui), and used for the yaku names. Keeps it consistent with the translator plugins, and allows the possibility to switch languages (not yet implemented here)
+
+`Data.py`
+----------
+dumps out complicated objects as plain text
+
+---
 
 Log Format
 ==========

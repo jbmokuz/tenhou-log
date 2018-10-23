@@ -236,6 +236,7 @@ class Game(Data):
         self.round.events = []
         self.round.ryuukyoku = False
         self.round.ryuukyoku_tenpai = None
+        self.round.reaches = []
 
         Dora(self.round.events).tile = Tile(dora)
 
@@ -252,6 +253,10 @@ class Game(Data):
 
     def tagRYUUKYOKU(self, tag, data):
         self.round.ryuukyoku = True
+
+        deltas = data['sc'].split(',')
+        self.round.deltas = [int(deltas[x]) for x in range(1,8,2)]
+
         if 'owari' in data:
             self.owari = data['owari']
         # For special ryuukyoku types, set to string ID rather than boolean
@@ -269,6 +274,9 @@ class Game(Data):
         agari.type = "RON" if data["fromWho"] != data["who"] else "TSUMO"
         agari.player = int(data["who"])
         agari.hand = self.decodeList(data["hai"], Tile)
+
+        deltas = data['sc'].split(',')
+        self.round.deltas = [int(deltas[x]) for x in range(1,8,2)]
 
         agari.fu, agari.points, limit = self.decodeList(data["ten"])
         if limit:
@@ -295,6 +303,10 @@ class Game(Data):
                 for yaku in self.decodeList(data["yakuman"]))
         if 'owari' in data:
             self.owari = data['owari']
+
+    def tagREACH(self, tag, data):
+        if 'ten' in data:
+            self.round.reaches.append(int(data['who']))
 
     @staticmethod
     def default(obj, tag, data):
@@ -325,6 +337,8 @@ class Game(Data):
             self.TAGS.get(event.tag, self.default)(self, event.tag, event.attrib)
         del self.round
 
+# %% get the yaku translations from the tenhou translator ui
+
 thisdir = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
 with open(os.path.join(thisdir, 'translations.js'), 'r', encoding='utf-8') as infile:
     txt = infile.read()
@@ -337,6 +351,8 @@ txt5 = re.sub(r',[\n ]*}', '}', txt4)
 txt6 = re.sub(r'\n', '', txt5)
 txt7 = re.sub(r"\\'", "'", txt6)
 Game.YAKU_NAMES = json.loads(txt7)
+
+# %%
 
 for key in Game.__dict__:
     if key.startswith('tag'):

@@ -15,6 +15,7 @@ class YakuCounter(Data):
         self.closed = YakuHanCounter(collections.Counter(), collections.Counter())
         self.opened = YakuHanCounter(collections.Counter(), collections.Counter())
         self.all = YakuHanCounter(collections.Counter(), collections.Counter())
+        self.reach_outcomes = []
 
     def addGame(self, game):
         self.player_index = None
@@ -26,8 +27,17 @@ class YakuCounter(Data):
             self.addRound(round)
 
     def addRound(self, round):
-        for agari in round.agari:
-            self.addAgari(agari)
+        try:
+            when_did_i_reach = round.reaches.index(self.player_index)
+            self.reach_outcomes.append({
+                'pursuit': when_did_i_reach,
+                'reach_count': len(round.reaches),
+                'points': round.deltas[self.player_index] - 10,
+                'type': round.agari[0].type if round.ryuukyoku is False else 'DRAW',
+            })
+        except ValueError:
+            pass
+
 
     def addAgari(self, agari):
         counterYaku, counterHan = self.closed if agari.closed else self.opened
