@@ -33,6 +33,7 @@ class YakuCounter(Data):
             when_did_i_reach = round.reaches.index(self.player_index)
             self.reach_outcomes.append({
                 'pursuit': when_did_i_reach,
+                'turn': round.reach_turns[when_did_i_reach],
                 'reach_count': len(round.reaches),
                 'points': round.deltas[self.player_index] - 10,
                 'type': round.agari[0].type if round.ryuukyoku is False else 'DRAW',

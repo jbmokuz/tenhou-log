@@ -12,7 +12,6 @@ import sys
 import yaml
 
 # own imports
-from Data import Data
 from TenhouConfig import account_names, directory_name
 import TenhouDecoder
 import TenhouYaku
@@ -43,9 +42,12 @@ parser.add_argument(
     action='store')
 
 args = parser.parse_args()
-counter = TenhouYaku.YakuCounter(winner = args.winner or (False if args.loser is True else None))
-gamecount = 0
 
+# %% accumulate stats across logged games
+
+counter = TenhouYaku.YakuCounter(winner = args.winner or (False if args.loser is True else None))
+
+gamecount = 0
 outcomes = [
     [[0, 0], [0, 0], [0, 0]],
     [[0, 0], [0, 0], [0, 0]],
@@ -54,6 +56,9 @@ outcomes = [
     [[0, 0], [0, 0], [0, 0]],
     [[0, 0], [0, 0], [0, 0]],
 ]
+
+reach_turn_outcomes = [0] * 30
+reach_turn_counts = [0] * 30
 
 outcome_names = ('I won', 'Draw', 'Bystander', 'Other tsumod', 'I dealt in', 'Averages')
 for player in account_names:
@@ -67,13 +72,18 @@ for player in account_names:
         if args.before and args.before <= key[0:8]:
             continue
         gamecount += 1
-        game = TenhouDecoder.Game(lang='DEFAULT', suppress_draws=True)
+        game = TenhouDecoder.Game(lang='DEFAULT', suppress_draws=False)
         game.decode(log['content'].decode())
         counter.reach_outcomes = []
         counter.addGame(game)
 
+
         for outcome in counter.reach_outcomes:
             # aggregate counter.reach_outcomes
+
+            reach_turn_outcomes[outcome['turn']] += outcome['points']
+            reach_turn_counts[outcome['turn']] += 1
+
             if outcome['type'] == 'DRAW':
                 row = 1                                  # draw
             elif outcome['points'] > 0:
@@ -88,8 +98,10 @@ for player in account_names:
             outcomes[row][outcome['pursuit']][0] += outcome['points']
             outcomes[row][outcome['pursuit']][1] += 1
 
-del counter.reach_outcomes
 
+# %% outputs
+
+del counter.reach_outcomes
 print('%d games' % gamecount)
 yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
 
@@ -123,3 +135,9 @@ riichid_hands = outcomes[5][0][1] + outcomes[5][1][1] + outcomes[5][2][1]
 total_hands = counter.hands['closed'] + counter.hands['opened']
 print('total hands: %d' % total_hands)
 print('Riichi rate: %.1f%%' % (100 * riichid_hands / total_hands))
+
+
+print('\n==================================\n')
+
+print(reach_turn_outcomes)
+print(reach_turn_counts)

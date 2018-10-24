@@ -238,6 +238,8 @@ class Game(Data):
         self.round.ryuukyoku = False
         self.round.ryuukyoku_tenpai = None
         self.round.reaches = []
+        self.round.reach_turns = []
+        self.round.turns = [0, 0, 0, 0]
 
         Dora(self.round.events).tile = Tile(dora)
 
@@ -245,6 +247,7 @@ class Game(Data):
         call = Call(self.round.events)
         call.meld = Meld.decode(data["m"])
         call.player = int(data["who"])
+        self.round.turns[call.player] += 1
 
     def tagTAIKYOKU(self, tag, data):
         pass
@@ -307,7 +310,9 @@ class Game(Data):
 
     def tagREACH(self, tag, data):
         if 'ten' in data:
-            self.round.reaches.append(int(data['who']))
+            player = int(data['who'])
+            self.round.reaches.append(player)
+            self.round.reach_turns.append(self.round.turns[player])
 
     @staticmethod
     def default(obj, tag, data):
@@ -322,6 +327,7 @@ class Game(Data):
             draw = Draw(obj.round.events)
             draw.tile = Tile(tag[1:])
             draw.player = ord(tag[0]) - ord("T")
+            obj.round.turns[draw.player] += 1
         else:
             pass
 
