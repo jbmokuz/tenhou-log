@@ -57,8 +57,8 @@ outcomes = [
     [[0, 0], [0, 0], [0, 0]],
 ]
 
-reach_turn_outcomes = [0] * 30
-reach_turn_counts = [0] * 30
+reach_turn_points = [[0] * 30, [0] * 30, [0] * 30, [0] * 30, [0] * 30]
+reach_turn_counts = [[0] * 30, [0] * 30, [0] * 30, [0] * 30, [0] * 30]
 
 outcome_names = ('I won', 'Draw', 'Bystander', 'Other tsumod', 'I dealt in', 'Averages')
 for player in account_names:
@@ -77,12 +77,8 @@ for player in account_names:
         counter.reach_outcomes = []
         counter.addGame(game)
 
-
         for outcome in counter.reach_outcomes:
             # aggregate counter.reach_outcomes
-
-            reach_turn_outcomes[outcome['turn']] += outcome['points']
-            reach_turn_counts[outcome['turn']] += 1
 
             if outcome['type'] == 'DRAW':
                 row = 1                                  # draw
@@ -98,12 +94,16 @@ for player in account_names:
             outcomes[row][outcome['pursuit']][0] += outcome['points']
             outcomes[row][outcome['pursuit']][1] += 1
 
+            #if outcome['pursuit']:
+            reach_turn_points[row][outcome['turn']] += outcome['points']
+            reach_turn_counts[row][outcome['turn']] += 1
+
 
 # %% outputs
 
 del counter.reach_outcomes
 print('%d games' % gamecount)
-yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
+#yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
 
 print('\n==================================\n')
 
@@ -139,5 +139,6 @@ print('Riichi rate: %.1f%%' % (100 * riichid_hands / total_hands))
 
 print('\n==================================\n')
 
-print(reach_turn_outcomes)
-print(reach_turn_counts)
+for row in range(5):
+    print(reach_turn_points[row])
+    print(reach_turn_counts[row])

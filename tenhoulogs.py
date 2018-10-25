@@ -25,9 +25,10 @@ class TenhouLogs():
     """
             stores tenhou logs
     """
-    GAMEURL = 'http://e.mjv.jp/0/log/plainfiles.cgi?%s'
+    GAMEURL = 'http://tenhou.net/3/mjlog2xml.cgi?%s'
+    # 'http://e.mjv.jp/0/log/plainfiles.cgi?%s'
 
-    def __init__(self, outdir, username, args):
+    def __init__(self, outdir, username, args={}):
         self.outdir = outdir
         self.username = username
 
@@ -67,12 +68,21 @@ class TenhouLogs():
         return found_player
 
 
+    def _load_from_text(self, key, text):
+        """ takes an mjlog text string in, and stores it as an xml object """
+        xml = etree.XML(text, etree.XMLParser(recover=True)).getroottree().getroot()
+        if not self._get_rates(xml, key):
+            return
+        self._flags.have_new = True
+        self._process_scores(xml, key)
+
+
     def _process_scores(self, xml, key):
         """
-                for one game, get the scores for each player,
-                rank them in descending order,
-                and compile into a string to match suehara.tk
-                Add this into the self record
+        for one game, get the scores for each player,
+        rank them in descending order,
+        and compile into a string to match nodocchi.moe
+        Add this into the self record
         """
         xml_scores = xml.find('AGARI[@owari][last()]')
         draw_test = xml.find('RYUUKYOKU[@owari][last()]')
@@ -121,8 +131,11 @@ class TenhouLogs():
 
         if not self._flags.no_web:
             print('gathering game: %s' % key)
-            loghttp = requests.get(self.GAMEURL % key)
-            if loghttp.status_code == 200:
+            loghttp = requests.get(
+                self.GAMEURL % key,
+                headers={'referer': 'http://tenhou.net/3/?%s&tw=0' % key}
+            )
+            if loghttp.ok:
                 self.logs[key]['content'] = loghttp.content
             else:
                 print('WARNING: failed to download %s' % key)
@@ -130,16 +143,7 @@ class TenhouLogs():
             del self.logs[key]
             return
 
-        xml = etree.XML(
-            self.logs[key]['content'],
-            etree.XMLParser(recover=True)
-            ).getroottree().getroot()
-
-        if not self._get_rates(xml, key):
-            return
-
-        self._flags.have_new = True
-        self._process_scores(xml, key)
+        self._load_from_text(key, self.logs[key]['content'])
 
 
     def _find_place_and_rate(self, this_log, key_index, logkeys):
@@ -207,6 +211,27 @@ class TenhouLogs():
 
         with open(self.outdir +  self.username + '.csv', 'w', encoding='utf-8-sig') as csv:
             csv.write(output)
+
+
+    def add_from_file(self, filepath):
+        """
+        receives a filepath, stores the mjlog in that file in the db
+        extracts the unique game id (key) from the filename.
+        If it fails to parse the file, it will try to download the game
+        using the key
+        """
+        try:
+            key = filepath.stem.split('&')[0]
+            if key in self.logs and not self._flags.force:
+                return
+            print(key)
+            with filepath.open(encoding='utf-8') as f:
+                text = f.read()
+                self.logs[key] = {'content': bytes(text, encoding='utf-8')}
+                self._load_from_text(key, text)
+        except:
+            # failed to load file, try downloading instead
+            self.one_record({'log': key}, '')
 
 
     @staticmethod
