@@ -70,7 +70,10 @@ class TenhouLogs():
 
     def _load_from_text(self, key, text):
         """ takes an mjlog text string in, and stores it as an xml object """
-        xml = etree.XML(text, etree.XMLParser(recover=True)).getroottree().getroot()
+        try:
+            xml = etree.XML(text, etree.XMLParser(recover=True)).getroottree().getroot()
+        except:
+            return
         if not self._get_rates(xml, key):
             return
         self._flags.have_new = True
@@ -285,15 +288,12 @@ class TenhouLogs():
         latest_key = next(reversed(self.logs))[0:10] if self.logs else ''
         if self._flags.force:
             self._flags.need_to_sort = True
-            new_games = games_to_add
-            for this_key in existing_keys:
-                if this_key not in games_to_add:
-                    new_games.append({'log': this_key})
-        else:
-            new_games = []
-            for one_log in games_to_add:
-                if 'log' in one_log and one_log['log'] not in existing_keys:
-                    new_games.append(one_log)
+        new_games = []
+        for one_log in games_to_add:
+            if 'log' in one_log and (
+                    self._flags.force or one_log['log'] not in existing_keys
+                ):
+                new_games.append(one_log)
 
         for one_log in new_games:
             self.one_record(one_log, latest_key)
