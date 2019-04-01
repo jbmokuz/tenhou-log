@@ -3,6 +3,8 @@ tenhou-log
 
 Scripts for downloading and aggregating logs from [Tenhou online riichi mahjong](http://tenhou.net/3)
 
+If you're using chrome, you'll need selenium (`pip install selenium`), and the latest version of [Chromedriver](http://chromedriver.chromium.org/) that matches your Chrome version.
+
 *Retrieving and archiving logs*
 ---
 

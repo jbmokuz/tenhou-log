@@ -177,7 +177,7 @@ def get_chrome_games(profile_dir):
             options = webdriver.ChromeOptions()
             options.add_argument('user-data-dir=%s' % profile_dir)
             options.add_argument('log-level=3')
-            browser = webdriver.Chrome(chrome_options=options)
+            browser = webdriver.Chrome(options=options)
             one_browser_logs(browser)
         except:
             print('error during Chrome localStorage processing')

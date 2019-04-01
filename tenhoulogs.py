@@ -25,8 +25,7 @@ class TenhouLogs():
     """
             stores tenhou logs
     """
-    GAMEURL = 'http://tenhou.net/3/mjlog2xml.cgi?%s'
-    # 'http://e.mjv.jp/0/log/plainfiles.cgi?%s'
+    GAMEURL = 'https://tenhou.net/3/mjlog2xml.cgi?%s'
 
     def __init__(self, outdir, username, args={}):
         self.outdir = outdir
@@ -73,6 +72,7 @@ class TenhouLogs():
         try:
             xml = etree.XML(text, etree.XMLParser(recover=True)).getroottree().getroot()
         except:
+            print('failed to parse xml in %s' % key)
             return
         if not self._get_rates(xml, key):
             return
@@ -136,7 +136,7 @@ class TenhouLogs():
             print('gathering game: %s' % key)
             loghttp = requests.get(
                 self.GAMEURL % key,
-                headers={'referer': 'http://tenhou.net/3/?%s&tw=0' % key}
+                headers={'referer': 'http://tenhou.net/3/', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0'}
             )
             if loghttp.ok:
                 self.logs[key]['content'] = loghttp.content
