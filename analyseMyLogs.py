@@ -45,7 +45,11 @@ args = parser.parse_args()
 
 # %% accumulate stats across logged games
 
-counter = TenhouYaku.YakuCounter(winner = args.winner or (False if args.loser is True else None))
+# default to only showing yaku counts for winning hands, unless command-line args specify otherwise
+won_hands_only = False if args.loser is True else (None if args.all is True else True)
+counter = TenhouYaku.YakuCounter(winner = won_hands_only)
+
+TURNS = 25
 
 gamecount = 0
 outcomes = [
@@ -57,8 +61,8 @@ outcomes = [
     [[0, 0], [0, 0], [0, 0]],
 ]
 
-reach_turn_points = [[0] * 30, [0] * 30, [0] * 30, [0] * 30, [0] * 30]
-reach_turn_counts = [[0] * 30, [0] * 30, [0] * 30, [0] * 30, [0] * 30]
+reach_turn_points = [[0] * TURNS, [0] * TURNS, [0] * TURNS, [0] * TURNS, [0] * TURNS]
+reach_turn_counts = [[0] * TURNS, [0] * TURNS, [0] * TURNS, [0] * TURNS, [0] * TURNS]
 
 outcome_names = ('I won', 'Draw', 'Bystander', 'Other tsumod', 'I dealt in', 'Averages')
 for player in account_names:
@@ -79,31 +83,37 @@ for player in account_names:
 
         for outcome in counter.reach_outcomes:
             # aggregate counter.reach_outcomes
+            try:
+                if outcome['type'] == 'DRAW':
+                    row = 1                                  # draw
+                elif outcome['points'] > 0:
+                    row = 0                                  # i won
+                elif outcome['points'] == -10:
+                    row = 2                                  # bystander
+                elif outcome['type'] == 'TSUMO':
+                    row = 3                                  # lost to other's tsumo
+                else:
+                    row = 4                                  # dealt in
 
-            if outcome['type'] == 'DRAW':
-                row = 1                                  # draw
-            elif outcome['points'] > 0:
-                row = 0                                  # i won
-            elif outcome['points'] == -10:
-                row = 2                                  # bystander
-            elif outcome['type'] == 'TSUMO':
-                row = 3                                  # lost to other's tsumo
-            else:
-                row = 4                                  # dealt in
+                outcomes[row][outcome['pursuit']][0] += outcome['points']
+                outcomes[row][outcome['pursuit']][1] += 1
 
-            outcomes[row][outcome['pursuit']][0] += outcome['points']
-            outcomes[row][outcome['pursuit']][1] += 1
-
-            #if outcome['pursuit']:
-            reach_turn_points[row][outcome['turn']] += outcome['points']
-            reach_turn_counts[row][outcome['turn']] += 1
-
+                #if outcome['pursuit']:
+                reach_turn_points[row][outcome['turn']] += outcome['points']
+                reach_turn_counts[row][outcome['turn']] += 1
+            except:
+                pass
 
 # %% outputs
 
 del counter.reach_outcomes
 print('%d games' % gamecount)
-#yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
+del counter.player
+del counter.player_index
+
+print('Stats for hands won' if won_hands_only else ('Stats for all hands' if won_hands_only is None else 'Stats for hands dealt into'))
+
+yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
 
 print('\n==================================\n')
 
@@ -133,12 +143,34 @@ for row in range(6):
 
 riichid_hands = outcomes[5][0][1] + outcomes[5][1][1] + outcomes[5][2][1]
 total_hands = counter.hands['closed'] + counter.hands['opened']
-print('total hands: %d' % total_hands)
+print('\ntotal hands: %d' % total_hands)
 print('Riichi rate: %.1f%%' % (100 * riichid_hands / total_hands))
 
 
 print('\n==================================\n')
 
+print('Results by hand outcome, by turn I riichid on')
+print('Turn: , ' +  ','.join(map(str, range(TURNS))))
+
 for row in range(5):
-    print(reach_turn_points[row])
-    print(reach_turn_counts[row])
+    print('No. of hands - ' + outcome_names[row] + ' , ' + ','.join(map(str, reach_turn_counts[row])))
+    print('Points per hand - ' + outcome_names[row], end='')
+    for turn in range(TURNS):
+        if reach_turn_points[row][turn] == 0:
+            print(',0',end='')
+        else:
+            print(',' + str(100 * reach_turn_points[row][turn] // reach_turn_counts[row][turn]), end='')
+    print('')
+
+print('average points: ', end='')
+for turn in range(TURNS):
+    nHands = 0
+    points = 0
+    for row in range(5):
+        nHands += reach_turn_counts[row][turn]
+        points += reach_turn_points[row][turn]
+    if nHands == 0:
+        print(',0', end='')
+    else:
+        print(',', str(100 * points // nHands), end='')
+print('')

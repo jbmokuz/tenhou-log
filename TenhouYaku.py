@@ -18,14 +18,17 @@ class YakuCounter(Data):
         self.reach_outcomes = []
 
     def addGame(self, game):
-        self.player_index = None
-        for idx, player in enumerate(game.players):
-            if player.name == self.player:
-                self.player_index = idx
-                break
-        for round in game.rounds:
-            self.addRound(round)
-
+        try:
+            self.player_index = None
+            for idx, player in enumerate(game.players):
+                if player.name == self.player:
+                    self.player_index = idx
+                    break
+            for round in game.rounds:
+                self.addRound(round)
+        except:
+            return
+            
     def addRound(self, round):
         for agari in round.agari:
             self.addAgari(agari)
@@ -61,10 +64,12 @@ class YakuCounter(Data):
         self.relevantHands["closed" if agari.closed else "opened"] += 1
         if hasattr(agari, 'yaku'):
             for yaku, han in agari.yaku:
-                counterYaku[yaku] += 1
-                counterHan[yaku] += han
-                allCounterYaku[yaku] += 1
-                allCounterHan[yaku] += han
+                # yaku is the name, e.g. "riichi", not an index
+                if han > 0:
+                    counterYaku[yaku] += 1
+                    counterHan[yaku] += han
+                    allCounterYaku[yaku] += 1
+                    allCounterHan[yaku] += han
         if hasattr(agari, 'yakuman'):
             for yakuman in agari.yakuman:
                 key = '___'+yakuman

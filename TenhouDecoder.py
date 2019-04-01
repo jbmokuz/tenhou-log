@@ -339,7 +339,10 @@ class Game(Data):
         try:
             events = etree.parse(log).getroot()
         except:
-            events = etree.fromstring(log)
+            try:
+                events = etree.fromstring(log)
+            except:
+                return
         self.rounds = []
         self.players = []
         for event in events:

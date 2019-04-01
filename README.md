@@ -5,6 +5,8 @@ Scripts for downloading and aggregating logs from [Tenhou online riichi mahjong]
 
 If you're using chrome, you'll need selenium (`pip install selenium`), and the latest version of [Chromedriver](http://chromedriver.chromium.org/) that matches your Chrome version.
 
+Thanks to [MaxB](https://github.com/maxb/tenhou-log) and [NegativeMjark](https://github.com/NegativeMjark/tenhou-log) for their earlier work on this.
+
 *Retrieving and archiving logs*
 ---
 
