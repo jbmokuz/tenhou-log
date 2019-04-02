@@ -106,14 +106,29 @@ for player in account_names:
 
 # %% outputs
 
-del counter.reach_outcomes
 print('%d games' % gamecount)
-del counter.player
-del counter.player_index
+total_hands = counter.hands['closed'] + counter.hands['opened']
 
 print('Stats for hands won' if won_hands_only else ('Stats for all hands' if won_hands_only is None else 'Stats for hands dealt into'))
-
-yaml.dump(counter.asdata(), sys.stdout, default_flow_style=False, allow_unicode=True)
+print('how, all count, all han, closed count, closed han, opened count, opened han')
+if won_hands_only is None:
+    print('Total hands played,%d,,%d,,%d,' % (
+        total_hands,
+        counter.hands['closed'],
+        counter.hands['opened']))
+else:
+    print('%s, %d,, %d,, %d,' % (
+            'Won hands' if won_hands_only else 'Hands dealt into',
+            counter.relevantHands['closed'] + counter.relevantHands['opened'],
+            counter.relevantHands['closed'],
+            counter.relevantHands['opened']))
+        
+for key in counter.all.han.keys():
+    print('%s, %d,%d, %d,%d, %d,%d' % (
+        key,counter.all.yaku[key],counter.all.han[key],
+          counter.closed.yaku[key],counter.closed.han[key],
+          counter.opened.yaku[key],counter.opened.han[key],
+          ))
 
 print('\n==================================\n')
 
@@ -124,7 +139,7 @@ for pursuit in range(3):
             outcomes[5][pursuit][col] += outcomes[row][pursuit][col]
 
 # print table
-print('%d games,first to riichi,,,second to riichi,,,third to riichi,,' % gamecount)
+print('%d hands,first to riichi,,,second to riichi,,,third to riichi,,' % total_hands)
 print('My outcome,My point change,hands,% of hands,My point change,hands,% of hands,My point change,hands,% of hands')
 for row in range(6):
     print(outcome_names[row], end='')
@@ -141,21 +156,22 @@ for row in range(6):
             print(',0,0,0', end='')
     print('')
 
-riichid_hands = outcomes[5][0][1] + outcomes[5][1][1] + outcomes[5][2][1]
-total_hands = counter.hands['closed'] + counter.hands['opened']
-print('\ntotal hands: %d' % total_hands)
-print('Riichi rate: %.1f%%' % (100 * riichid_hands / total_hands))
+print('Riichi rate,,,%.1f%%,,,%.1f%%,,,%.1f%%' % (
+        100 * outcomes[5][0][1] / total_hands,
+        100 * outcomes[5][1][1] / total_hands,
+        100 * outcomes[5][2][1] / total_hands,
+        ))
 
 
 print('\n==================================\n')
 
 print('Results by hand outcome, by turn I riichid on')
-print('Turn: , ' +  ','.join(map(str, range(TURNS))))
+print('Turn: , ' +  ','.join(map(str, range(1, TURNS))))
 
 for row in range(5):
-    print('No. of hands - ' + outcome_names[row] + ' , ' + ','.join(map(str, reach_turn_counts[row])))
+    print('No. of hands - ' + outcome_names[row] + ' , ' + ','.join(map(str, reach_turn_counts[row][1:])))
     print('Points per hand - ' + outcome_names[row], end='')
-    for turn in range(TURNS):
+    for turn in range(1, TURNS):
         if reach_turn_points[row][turn] == 0:
             print(',0',end='')
         else:
@@ -163,7 +179,7 @@ for row in range(5):
     print('')
 
 print('average points: ', end='')
-for turn in range(TURNS):
+for turn in range(1, TURNS):
     nHands = 0
     points = 0
     for row in range(5):
