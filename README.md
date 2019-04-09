@@ -10,11 +10,11 @@ Thanks to [MaxB](https://github.com/maxb/tenhou-log) and [NegativeMjark](https:/
 *Setting Up*
 ---
 
-If you don't already have Python, download it from [the downloads page.](https://www.python.org/downloads/) Version 3.7.3 will definitely work.
+If you don't already have Python, download it from [the downloads page.](https://www.python.org/downloads/) Versions 3.6.x and 3.7.x will definitely work.
 
 [Download this repo](https://github.com/ApplySci/tenhou-log/archive/master.zip) and unzip it somewhere memorable.
 
-Open a terminal or command prompt in the "tenhou-log-master" folder and enter `pip install -r requirements.txt`. This will install all the dependencies.
+Open a terminal or command prompt in the "tenhou-log-master" folder and enter `pip install -r requirements.txt`. This will install all the python dependencies. If you're going to extract logs from Chrome, you'll need to download a version of [ChromeDriver](http://chromedriver.chromium.org/) that matches your version of Chrome. Put chromedriver.exe somewhere in your PATH.
 
 Finally, open TenhouConfig.py in a text editor and change the fields to be suitable for you. You can then run the `getlogs.py` file to download your logs, and run `analyseMyLogs.py` to see some stats. Every time you run `getlogs.py`, the new games that are found will be added. It can find the last 40 games played, so if you want complete stats, you will need to run `getlogs.py` at least once every 40 games.
 
@@ -55,7 +55,7 @@ Cycles over a bunch of ids, downloads them, and adds them into the store. Stores
 
 `analyseMyLogs.py`
 --------------
-Example use of the log analyser to cycle through many log files (perhaps for several accounts for one person) and aggregate results. Uses `TenhouConfig.py` for account names and work directory, `TenhouDecoder.py` to process the log files, and `TenhouYaku.py` to produce the summary stats. There are some command line arguments to change the behaviour:
+Cycles through one or more log compilations (as created by `tenhoulogs.py`) and aggregate results. Uses `TenhouConfig.py` for account names and work directory, `TenhouDecoder.py` to process the log files, and `TenhouYaku.py` to produce the summary stats. There are some command line arguments to change the behaviour:
 
 | Arguments  | Explanation |
 | ------------- | ------------- |
