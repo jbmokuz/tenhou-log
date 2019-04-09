@@ -16,7 +16,7 @@ class Tile(Data, int):
         🀐 🀑 🀒 🀓 🀔 🀕 🀖 🀗 🀘
         🀙 🀚 🀛 🀜 🀝 🀞 🀟 🀠 🀡
         🀇 🀈 🀉 🀊 🀋 🀌 🀍 🀎 🀏
-        🀀 🀁 🀂 🀃
+        🀀 🀁 🀂 🀃 
         🀆 🀅 🀄
     """.split()
 
@@ -48,7 +48,7 @@ class Round(Data):
         self.events = []
         self.ryuukyoku = False # Can also be a string, if it's special
         self.ryuukyoku_tenpai = None
-        self.reaches = [0, 0, 0, 0] # What turn it was when each player reached
+        self.reaches = [] # What turn it was when each player reached
         self.reach_turns = [] # What turns reaches happened on
         self.turns = [0, 0, 0, 0] # What turn it is for each player
         self.deltas = [] # Score changes
