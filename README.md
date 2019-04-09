@@ -7,6 +7,18 @@ If you're using chrome, you'll need selenium (`pip install selenium`), and the l
 
 Thanks to [MaxB](https://github.com/maxb/tenhou-log) and [NegativeMjark](https://github.com/NegativeMjark/tenhou-log) for their earlier work on this.
 
+*Setting Up*
+---
+
+If you don't already have Python, download it from [the downloads page.](https://www.python.org/downloads/) Version 3.7.3 will definitely work.
+
+[Download this repo](https://github.com/ApplySci/tenhou-log/archive/master.zip) and unzip it somewhere memorable.
+
+Open a terminal or command prompt in the "tenhou-log-master" folder and enter `pip install -r requirements.txt`. This will install all the dependencies.
+
+Finally, open TenhouConfig.py in a text editor and change the fields to be suitable for you. You can then run the `getlogs.py` file to download your logs, and run `analyseMyLogs.py` to see some stats. Every time you run `getlogs.py`, the new games that are found will be added. It can find the last 40 games played, so if you want complete stats, you will need to run `getlogs.py` at least once every 40 games.
+
+
 *Retrieving and archiving logs*
 ---
 
@@ -14,7 +26,19 @@ XML game logs are stored in a 7-zipped pickle file.
 
 `getlogs.py`
 ---------------
-Finds games to download from Firefox localStorage (by default). It also (on request, not default) tries Chrome localStorage. If directly accessing the localStorage file fails (leveldb access for Chrome fails on windows), it automates opening the browser and gets the localStorage that way: this is ugly but effective. It can also take game IDs or game URLs from the command line. It then calls `tenhoulogs.py` with the list of game IDs. There are several command-line options to change the behaviour.
+Finds games to download from Firefox localStorage (by default). It also (on request, not default) tries Chrome localStorage. If directly accessing the localStorage file fails (leveldb access for Chrome fails on windows), it automates opening the browser and gets the localStorage that way: this is ugly but effective. It can also take game IDs or game URLs from the command line. It then calls `tenhoulogs.py` with the list of game IDs. There are several command-line options to change the behaviour:
+
+| Arguments  | Explanation |
+| ------------- | ------------- |
+| -u MyID / --user MyID  | User IDs, space-separated  |
+| -nf / --no-firefox  | Skips checking Firefox for logs  |
+| -c / --chrome | Checks Chrome for logs |
+| --urls "url1, url2" | URLs of games to load |
+| --ids "id1, id2" | IDs of games to load |
+| --json | Output JSON to the command line |
+| --wait | Wait for 5 minutes before updating, eg to ensure Dropbox is synched |
+| --force | Update all games, even if they've already been retrieved |
+| --no-web | Do not retrieve games from the web |
 
 `tenhoulogs.py`
 ------------------
@@ -31,7 +55,15 @@ Cycles over a bunch of ids, downloads them, and adds them into the store. Stores
 
 `analyseMyLogs.py`
 --------------
-Example use of the log analyser to cycle through many log files (perhaps for several accounts for one person) and aggregate results. Uses `TenhouConfig.py` for account names and work directory, `TenhouDecoder.py` to process the log files, and `TenhouYaku.py` to produce the summary stats.
+Example use of the log analyser to cycle through many log files (perhaps for several accounts for one person) and aggregate results. Uses `TenhouConfig.py` for account names and work directory, `TenhouDecoder.py` to process the log files, and `TenhouYaku.py` to produce the summary stats. There are some command line arguments to change the behaviour:
+
+| Arguments  | Explanation |
+| ------------- | ------------- |
+| -w / --winner | Only count yaku for when the user wins the hand (default) |
+| -l / --loser | Only count yaku for when the user lost the hand |
+| -a / --all | Count yaku from all hands |
+| --since yyyymmdd | Only include games since this date |
+| --before yyyymmdd | Only include games before this date |
 
 `TenhouDecoder.py`
 ---------------------
