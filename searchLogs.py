@@ -32,6 +32,10 @@ parser.add_argument(
     '--yaku',
     help='the yaku to search for',
     action='store')
+parser.add_argument(
+    '--freetext',
+    help='search for text in any part of the log',
+    action='store')
 group = parser.add_mutually_exclusive_group()
 group.add_argument(
     '--sanma',
@@ -46,10 +50,15 @@ args = parser.parse_args()
 gamecount = 0
 matchedLogs = []
 
+targetYaku = ''
+targetText = ''
+
+def searchForFreeText(log):
+    return targetText in log['content'].decode().lower()
+    
 def searchForYaku(log):
     game = TenhouDecoder.Game(lang='DEFAULT', suppress_draws=True)
-    game.decode(log['content'].decode())
-    targetYaku = args.yaku.lower()
+    game.decode(log['content'].decode())    
     for round in game.rounds:
         for agari in round.agari:
             if hasattr(agari, 'yaku'):
@@ -61,6 +70,11 @@ def searchForYaku(log):
                     if yakuman.lower() == targetYaku:
                         return True
     return False
+
+if args.yaku:
+    targetYaku = args.yaku.lower()
+if args.freetext:
+    targetText = args.freetext.lower()
 
 for player in account_names:
     with lzma.open(directory_name + player + '.pickle.7z', 'rb') as infile:
@@ -86,6 +100,8 @@ for player in account_names:
                     break
             if not hasPlayer:
                 continue
+        if args.freetext and not searchForFreeText(log):
+            continue            
         if args.yaku and not searchForYaku(log):
             continue
         
