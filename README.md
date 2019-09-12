@@ -143,6 +143,7 @@ Log Format
 <AGARI>         A player won the hand
  - who              The player who won.
  - fromwho          Who the winner won from: themselves for tsumo, someone else for ron.
+ - paoWho           If yakuman with Pao, who was liable.
  - hai              The closed hand of the winner as a list of tiles.
  - m                The open melds of the winner as a list of melds.
  - machi            The waits of the winner as a list of tiles.

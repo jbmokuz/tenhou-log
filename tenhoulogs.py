@@ -138,11 +138,11 @@ class TenhouLogs():
                 self.GAMEURL % key,
                 headers={'referer': 'http://tenhou.net/3/', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0'}
             )
-            if loghttp.ok:
+            if loghttp.ok:                
                 self.logs[key]['content'] = loghttp.content
             else:
                 print('WARNING: failed to download %s' % key)
-        if 'content' not in self.logs[key]:
+        if 'content' not in self.logs[key] or self.logs[key]['content'] == '':
             del self.logs[key]
             return
 
@@ -204,12 +204,15 @@ class TenhouLogs():
                     break
                 this_hour = key[8:10]
                 this_minute = this_minute + 5 if this_hour == last_hour else 10
+                
                 output = output + (
-                    '%s-%s-%s %s:%d,"%s",%.2f,%.2f,%d\n' %
+                    '%s-%s-%s %s:%d,"%s",%.2f,%.2f,%d,"http://tenhou.net/3/?log=%s&tw=%d"\n' %
                     (key[0:4], key[4:6], key[6:8], this_hour, this_minute,
                      this_log['players'],
-                     this_log['rate'], this_log['meanrate'], this_log['place'])
+                     this_log['rate'], this_log['meanrate'], this_log['place'],
+                     key, this_log['uname'].index(self.username))
                 )
+
                 last_hour = this_hour
 
         with open(self.outdir +  self.username + '.csv', 'w', encoding='utf-8-sig') as csv:
