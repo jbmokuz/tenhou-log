@@ -73,6 +73,7 @@ class TenhouLogs():
             xml = etree.XML(text, etree.XMLParser(recover=True)).getroottree().getroot()
         except:
             print('failed to parse xml in %s' % key)
+            print(text)
             return
         if not self._get_rates(xml, key):
             return
@@ -138,7 +139,7 @@ class TenhouLogs():
                 self.GAMEURL % key,
                 headers={'referer': 'http://tenhou.net/3/', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0'}
             )
-            if loghttp.ok:                
+            if loghttp.ok:
                 self.logs[key]['content'] = loghttp.content
             else:
                 print('WARNING: failed to download %s' % key)
@@ -204,11 +205,11 @@ class TenhouLogs():
                     break
                 this_hour = key[8:10]
                 this_minute = this_minute + 5 if this_hour == last_hour else 10
-                
+
                 output = output + (
                     '%s-%s-%s %s:%d,"%s",%.2f,%.2f,%d,"http://tenhou.net/3/?log=%s&tw=%d"\n' %
                     (key[0:4], key[4:6], key[6:8], this_hour, this_minute,
-                     this_log['players'],
+                     this_log['players'].replace('"','""'),
                      this_log['rate'], this_log['meanrate'], this_log['place'],
                      key, this_log['uname'].index(self.username))
                 )
@@ -310,6 +311,7 @@ class TenhouLogs():
         """
         self.write_csv()
         if self._flags.have_new:
+            print('saving logs')
             with lzma.open(self.pickle_file, 'wb') as outfile:
                 pickle.dump(self.logs, outfile, protocol=4)
         try:

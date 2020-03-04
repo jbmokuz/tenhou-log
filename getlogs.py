@@ -98,7 +98,7 @@ def one_browser_logs(thisbrowser):
     """
     try:
         thisbrowser.set_window_position(-3000, 0)
-        thisbrowser.get('http://tenhou.net/make_lobby.html')
+        thisbrowser.get('https://tenhou.net/2/')
 
         for i in range(0, 40):
             log = thisbrowser.execute_script("return localStorage.getItem('log%d')" % i)
@@ -121,7 +121,7 @@ def get_firefox_games(profile_dir):
         print('finding firefox files')
         with sqlite3.connect(os.path.join(firefox_profile, 'webappsstore.sqlite')) as db:
             cur = db.cursor()
-            cur.execute("SELECT * FROM webappsstore2 WHERE originKey='ten.uohnet.:http:80' AND key LIKE 'log%'")
+            cur.execute("SELECT * FROM webappsstore2 WHERE originKey LIKE 'ten.uohnet%' AND key LIKE 'log%'")
             for row in cur.fetchall():
                 if row[3][3].isdigit():
                     games_discovered.append(json.loads(row[4]))
